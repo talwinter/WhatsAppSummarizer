@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark Theme Colors -->
+    <color name="background_dark">#FF121212</color>
+    <color name="surface_dark">#FF1E1E1E</color>
+    <color name="surface_variant">#FF2C2C2C</color>
+    
+    <!-- Chat Colors -->
+    <color name="chat_background">#FF0F1419</color>
+    <color name="message_bubble_received">#FF2C3E50</color>
+    <color name="message_bubble_sent">#FF1B5E20</color>
+    <color name="message_text">#FFFFFFFF</color>
+    <color name="message_time">#FFB0BEC5</color>
+    <color name="sender_name">#FF81C784</color>
+    <color name="date_separator_bg">#FF37474F</color>
+    <color name="date_separator_text">#FFFFFFFF</color>
+    
+    <!-- Accent Colors -->
+    <color name="primary">#FF4CAF50</color>
+    <color name="primary_dark">#FF388E3C</color>
+    <color name="accent">#FF69F0AE</color>
+    <color name="error">#FFCF6679</color>
+    <color name="warning">#FFFFB74D</color>
+    
+    <!-- Text Colors -->
+    <color name="text_primary">#FFFFFFFF</color>
+    <color name="text_secondary">#FFB0BEC5</color>
+    <color name="text_hint">#FF78909C</color>
+    
+    <!-- Card & Divider -->
+    <color name="card_background">#FF1E1E1E</color>
+    <color name="divider">#FF2C2C2C</color>
+    
+    <!-- Legacy colors for compatibility -->
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>

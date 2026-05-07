@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background_dark">
+
+    <!-- Header -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/surface_dark"
+        app:title="Chats"
+        app:titleTextColor="@color/text_primary"
+        app:menu="@menu/menu_main" />
+
+    <!-- Info Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="12dp"
+        app:cardBackgroundColor="@color/surface_variant"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="0dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:text="@string/app_description"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary"
+            android:lineSpacingMultiplier="1.3" />
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Chat List -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewChats"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:padding="8dp" />
+
+        <TextView
+            android:id="@+id/emptyStateText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="@string/empty_state_message"
+            android:textSize="16sp"
+            android:textColor="@color/text_secondary"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+    <!-- FAB -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabCleanup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_margin="16dp"
+        android:contentDescription="@string/cleanup_old_messages"
+        app:backgroundTint="@color/error"
+        app:tint="@color/white"
+        app:srcCompat="@android:drawable/ic_menu_delete" />
+
+</LinearLayout>

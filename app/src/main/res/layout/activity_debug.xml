@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background_dark">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/surface_dark"
+        app:title="Debug Log"
+        app:titleTextColor="@color/text_primary"
+        app:navigationIconTint="@color/text_primary" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/textCount"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="0 entries"
+            android:textSize="16sp"
+            android:textColor="@color/text_primary" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonRefresh"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Refresh"
+            android:layout_marginEnd="8dp"
+            app:backgroundTint="@color/primary" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonCopy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Copy All"
+            android:layout_marginEnd="8dp"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:textColor="@color/accent"
+            app:strokeColor="@color/accent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonShare"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Share"
+            android:layout_marginEnd="8dp"
+            app:backgroundTint="@color/primary" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonClear"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Clear"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:textColor="@color/error"
+            app:strokeColor="@color/error" />
+
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewLogs"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:padding="8dp" />
+
+</LinearLayout>

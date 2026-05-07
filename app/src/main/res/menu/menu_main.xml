@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_debug"
+        android:title="Debug Log"
+        android:orderInCategory="75"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_green_api"
+        android:title="WhatsApp Groups (GreenAPI)"
+        android:orderInCategory="80"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_merge_chats"
+        android:title="Merge Similar Chats"
+        android:orderInCategory="85"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_clear_duplicates"
+        android:title="Clear Duplicates"
+        android:orderInCategory="90"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_settings"
+        android:title="Settings"
+        android:orderInCategory="100"
+        app:showAsAction="never" />
+
+</menu>

@@ -1,0 +1,24 @@
+# Build files
+.gradle/
+build/
+app/build/
+
+# APK outputs
+*.apk
+
+# Model files
+*.bin
+
+# Keystore
+keystore.jks
+
+# Build logs
+*.log
+build_*.log
+
+# Temp files
+tempcmdline-tools.zip
+nul
+
+# Local config
+local.properties

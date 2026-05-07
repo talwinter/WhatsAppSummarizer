@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">WhatsApp Summarizer</string>
+    <string name="app_description">This app captures WhatsApp messages from notifications. Open WhatsApp to start receiving messages.</string>
+    <string name="empty_state_message">No messages captured yet.\nMake sure to enable notification access and open WhatsApp.</string>
+    <string name="tap_to_view_messages">Tap to view messages</string>
+    <string name="summarize">Summarize</string>
+    <string name="delete">Delete</string>
+    <string name="cleanup_old_messages">Cleanup old messages</string>
+    <string name="api_key_hint">OpenAI API Key</string>
+    <string name="api_key_help">Enter your OpenAI API key (starts with sk-)</string>
+    <string name="generate_summary">Generate Summary</string>
+    <string name="summary_will_appear_here">Summary will appear here after you click Generate Summary</string>
+    <string name="settings">Settings</string>
+    <string name="whole_day">Whole Day</string>
+    <string name="custom_range">Custom Range</string>
+    <string name="from">From</string>
+    <string name="to">To</string>
+    <string name="rtl_mode">RTL Mode</string>
+    <string name="rtl_description">Enable full right-to-left layout support</string>
+    <string name="ai_provider">AI Provider</string>
+    <string name="use_openai">OpenAI API (Cloud)</string>
+    <string name="use_local">Local Model (Offline)</string>
+    <string name="import_model">Import Model</string>
+    <string name="delete_model">Delete Model</string>
+    <string name="green_api_groups">WhatsApp Groups (GreenAPI)</string>
+    <string name="model_status">Model Status:</string>
+    <string name="hebrew_language">Language: Hebrew</string>
+    <string name="english_language">Language: English</string>
+</resources>

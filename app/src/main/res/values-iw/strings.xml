@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">מסכם וואטסאפ</string>
+    <string name="app_description">אפליקציה זו לוכדת הודעות וואטסאף מהתראות. פתח את וואטסאף כדי להתחיל לקבל הודעות.</string>
+    <string name="empty_state_message">עדיין לא נלכדו הודעות.\nוודא שאפשרת גישה להתראות ופתח את וואטסאף.</string>
+    <string name="tap_to_view_messages">הקש לצפייה בהודעות</string>
+    <string name="summarize">סכם</string>
+    <string name="delete">מחק</string>
+    <string name="cleanup_old_messages">ניקוי הודעות ישנות</string>
+    <string name="api_key_hint">מפתח API של OpenAI</string>
+    <string name="api_key_help">הזן את מפתח ה-API שלך (מתחיל ב-sk-)</string>
+    <string name="generate_summary">צור סיכום</string>
+    <string name="summary_will_appear_here">סיכום יופיע כאן לאחר לחיצה על "צור סיכום"</string>
+    <string name="settings">הגדרות</string>
+    <string name="whole_day">היום שלם</string>
+    <string name="custom_range">טווח זמן מותאם</string>
+    <string name="from">מ-</string>
+    <string name="to">עד-</string>
+    <string name="rtl_mode">מצב RTL</string>
+    <string name="rtl_description">הפעל תמיכה מלאה בכיוון ימין לשמאל</string>
+    <string name="ai_provider">ספק AI</string>
+    <string name="use_openai">OpenAI API (ענן)</string>
+    <string name="use_local">מודל מקומי (לא מקוון)</string>
+    <string name="import_model">ייבא מודל</string>
+    <string name="delete_model">מחק מודל</string>
+    <string name="model_status">סטטוס מודל:</string>
+    <string name="hebrew_language">שפה: עברית</string>
+    <string name="english_language">שפה: אנגלית</string>
+</resources>
