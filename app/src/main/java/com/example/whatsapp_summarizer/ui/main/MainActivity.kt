@@ -4,17 +4,23 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
+import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
+import androidx.core.widget.doAfterTextChanged
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.whatsapp_summarizer.R
 import com.example.whatsapp_summarizer.databinding.ActivityMainBinding
 import com.example.whatsapp_summarizer.ui.debug.DebugActivity
 import com.example.whatsapp_summarizer.ui.greenapi.GreenApiChatListActivity
 import com.example.whatsapp_summarizer.ui.group.ChatActivity
 import com.example.whatsapp_summarizer.ui.settings.SettingsActivity
 import com.example.whatsapp_summarizer.ui.summary.SummaryActivity
+import com.example.whatsapp_summarizer.util.ChatNameNormalizer
 
 class MainActivity : AppCompatActivity() {
 
@@ -22,23 +28,32 @@ class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
     private lateinit var chatAdapter: ChatListAdapter
 
+    /** Latest unfiltered list; the search box narrows this without refetching. */
+    private var allItems: List<ChatListItem> = emptyList()
+    private var searchQuery: String = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         // Apply RTL setting before setting content view
         applyRtlSettings()
-        
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         setSupportActionBar(binding.toolbar)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
 
         setupRecyclerView()
+        setupSearch()
         observeViewModel()
         checkNotificationAccess()
 
-        binding.fabCleanup.setOnClickListener {
-            showCleanupDialog()
+        binding.fabCleanup.setOnClickListener { showCleanupDialog() }
+        binding.layoutStatus.setOnClickListener {
+            if (!hasNotificationAccess()) {
+                startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+            }
         }
     }
 
@@ -46,9 +61,9 @@ class MainActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("app_settings", Context.MODE_PRIVATE)
         val rtlEnabled = prefs.getBoolean("rtl_mode", false)
         if (rtlEnabled) {
-            window.decorView.layoutDirection = android.view.View.LAYOUT_DIRECTION_RTL
+            window.decorView.layoutDirection = View.LAYOUT_DIRECTION_RTL
         } else {
-            window.decorView.layoutDirection = android.view.View.LAYOUT_DIRECTION_LTR
+            window.decorView.layoutDirection = View.LAYOUT_DIRECTION_LTR
         }
     }
 
@@ -57,9 +72,9 @@ class MainActivity : AppCompatActivity() {
             onChatClick = { chatName ->
                 // Get all raw variations of this chat name
                 val mapping = viewModel.nameMapping.value ?: emptyMap()
-                val normalized = com.example.whatsapp_summarizer.util.ChatNameNormalizer.normalize(chatName)
+                val normalized = ChatNameNormalizer.normalize(chatName)
                 val variations = mapping[normalized] ?: listOf(chatName)
-                
+
                 val intent = Intent(this, ChatActivity::class.java).apply {
                     putExtra("CHAT_NAME", chatName)
                     putStringArrayListExtra("CHAT_VARIATIONS", ArrayList(variations))
@@ -72,9 +87,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 startActivity(intent)
             },
-            onDeleteClick = { chatName ->
-                showDeleteDialog(chatName)
-            }
+            onDeleteClick = { chatName -> showDeleteDialog(chatName) }
         )
 
         binding.recyclerViewChats.apply {
@@ -83,98 +96,156 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupSearch() {
+        binding.editSearch.doAfterTextChanged { text ->
+            searchQuery = text?.toString()?.trim().orEmpty()
+            renderList()
+        }
+    }
+
     private fun observeViewModel() {
-        viewModel.allChatNames.observe(this) { chatNames ->
-            chatAdapter.submitList(chatNames)
-            binding.emptyStateText.visibility = if (chatNames.isEmpty()) {
-                android.view.View.VISIBLE
-            } else {
-                android.view.View.GONE
-            }
+        // Chat names and counts arrive from separate queries; rebuild rows when
+        // either changes so a row never shows a stale count.
+        viewModel.allChatNames.observe(this) { rebuildItems() }
+        viewModel.chatCounts.observe(this) { rebuildItems() }
+    }
+
+    private fun rebuildItems() {
+        val names = viewModel.allChatNames.value ?: emptyList()
+        val counts = viewModel.chatCounts.value
+            ?.associate { it.chatName to it.count }
+            ?: emptyMap()
+
+        allItems = names
+            .map { ChatListItem(it, counts[it] ?: 0) }
+            .sortedByDescending { it.messageCount }
+
+        updateHeader()
+        renderList()
+    }
+
+    private fun renderList() {
+        val visible = if (searchQuery.isBlank()) {
+            allItems
+        } else {
+            allItems.filter { it.chatName.contains(searchQuery, ignoreCase = true) }
         }
 
-        viewModel.chatCounts.observe(this) { counts ->
-            val countMap = counts.associate { it.chatName to it.count }
-            chatAdapter.setMessageCounts(countMap)
+        chatAdapter.submitList(visible)
+
+        val isEmpty = visible.isEmpty()
+        binding.emptyState.isVisible = isEmpty
+        if (isEmpty) {
+            val searching = searchQuery.isNotBlank()
+            binding.emptyStateTitle.setText(
+                if (searching) R.string.no_search_results_title else R.string.empty_state_title
+            )
+            binding.emptyStateText.setText(
+                if (searching) R.string.no_search_results else R.string.empty_state_message
+            )
         }
+    }
+
+    private fun updateHeader() {
+        val totalMessages = allItems.sumOf { it.messageCount }
+        binding.textSubhead.text = if (allItems.isEmpty()) {
+            getString(R.string.subhead_empty)
+        } else {
+            getString(R.string.subhead_stats, allItems.size, totalMessages)
+        }
+        updateStatusPill()
+    }
+
+    private fun updateStatusPill() {
+        val granted = hasNotificationAccess()
+        binding.textStatus.setText(
+            if (granted) R.string.status_capturing else R.string.status_no_access
+        )
+        val dotColor = if (granted) R.color.primary else R.color.warning
+        binding.dotStatus.backgroundTintList =
+            android.content.res.ColorStateList.valueOf(ContextCompat.getColor(this, dotColor))
     }
 
     override fun onResume() {
         super.onResume()
         viewModel.loadChatCounts()
+        updateStatusPill()
     }
 
-    private fun checkNotificationAccess() {
+    private fun hasNotificationAccess(): Boolean {
         val enabledListeners = Settings.Secure.getString(
             contentResolver,
             "enabled_notification_listeners"
         )
-        val packageName = packageName
-        if (enabledListeners == null || !enabledListeners.contains(packageName)) {
+        return enabledListeners != null && enabledListeners.contains(packageName)
+    }
+
+    private fun checkNotificationAccess() {
+        if (!hasNotificationAccess()) {
             showNotificationAccessDialog()
         }
     }
 
     private fun showNotificationAccessDialog() {
         AlertDialog.Builder(this)
-            .setTitle("Notification Access Required")
-            .setMessage("This app needs access to your notifications to capture WhatsApp messages. Please enable it in settings.")
-            .setPositiveButton("Open Settings") { _, _ ->
+            .setTitle(R.string.notification_access_title)
+            .setMessage(R.string.notification_access_message)
+            .setPositiveButton(R.string.open_settings) { _, _ ->
                 startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(R.string.action_cancel, null)
             .setCancelable(false)
             .show()
     }
 
     private fun showDeleteDialog(chatName: String) {
         AlertDialog.Builder(this)
-            .setTitle("Delete Chat")
-            .setMessage("Are you sure you want to delete all messages from '$chatName'?")
-            .setPositiveButton("Delete") { _, _ ->
+            .setTitle(R.string.delete_chat_title)
+            .setMessage(getString(R.string.delete_chat_message, chatName))
+            .setPositiveButton(R.string.action_delete) { _, _ ->
                 viewModel.deleteChat(chatName)
-                Toast.makeText(this, "Chat deleted", Toast.LENGTH_SHORT).show()
+                toast(getString(R.string.chat_deleted))
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(R.string.action_cancel, null)
             .show()
     }
 
     private fun showCleanupDialog() {
         AlertDialog.Builder(this)
-            .setTitle("Cleanup Old Messages")
-            .setMessage("Delete messages older than 30 days?")
-            .setPositiveButton("Cleanup") { _, _ ->
+            .setTitle(R.string.cleanup_title)
+            .setMessage(R.string.cleanup_message)
+            .setPositiveButton(R.string.action_cleanup) { _, _ ->
                 viewModel.cleanupOldMessages()
-                Toast.makeText(this, "Old messages cleaned up", Toast.LENGTH_SHORT).show()
+                toast(getString(R.string.cleanup_done))
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(R.string.action_cancel, null)
             .show()
     }
 
     override fun onCreateOptionsMenu(menu: android.view.Menu?): Boolean {
-        menuInflater.inflate(com.example.whatsapp_summarizer.R.menu.menu_main, menu)
+        menuInflater.inflate(R.menu.menu_main, menu)
         return true
     }
 
     override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
         return when (item.itemId) {
-            com.example.whatsapp_summarizer.R.id.action_settings -> {
+            R.id.action_settings -> {
                 startActivity(Intent(this, SettingsActivity::class.java))
                 true
             }
-            com.example.whatsapp_summarizer.R.id.action_debug -> {
+            R.id.action_debug -> {
                 startActivity(Intent(this, DebugActivity::class.java))
                 true
             }
-            com.example.whatsapp_summarizer.R.id.action_clear_duplicates -> {
+            R.id.action_clear_duplicates -> {
                 showClearDuplicatesDialog()
                 true
             }
-            com.example.whatsapp_summarizer.R.id.action_merge_chats -> {
+            R.id.action_merge_chats -> {
                 showMergeChatsDialog()
                 true
             }
-            com.example.whatsapp_summarizer.R.id.action_green_api -> {
+            R.id.action_green_api -> {
                 startActivity(Intent(this, GreenApiChatListActivity::class.java))
                 true
             }
@@ -184,27 +255,31 @@ class MainActivity : AppCompatActivity() {
 
     private fun showClearDuplicatesDialog() {
         AlertDialog.Builder(this)
-            .setTitle("Clear Duplicate Messages")
-            .setMessage("This will remove duplicate messages from the database. Continue?")
-            .setPositiveButton("Clear") { _, _ ->
+            .setTitle(R.string.clear_duplicates_title)
+            .setMessage(R.string.clear_duplicates_message)
+            .setPositiveButton(R.string.action_clear) { _, _ ->
                 viewModel.removeDuplicateMessages { removed ->
-                    Toast.makeText(this, "Removed $removed duplicate messages", Toast.LENGTH_LONG).show()
+                    toast("Removed $removed duplicate messages")
                 }
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(R.string.action_cancel, null)
             .show()
     }
 
     private fun showMergeChatsDialog() {
         AlertDialog.Builder(this)
-            .setTitle("Merge Similar Chats")
-            .setMessage("This will merge chats that have the same name but different invisible characters (like non-breaking spaces). Continue?")
-            .setPositiveButton("Merge") { _, _ ->
+            .setTitle(R.string.merge_chats_title)
+            .setMessage(R.string.merge_chats_message)
+            .setPositiveButton(R.string.action_merge) { _, _ ->
                 viewModel.mergeSimilarChats { merged ->
-                    Toast.makeText(this, "Merged $merged similar chats", Toast.LENGTH_LONG).show()
+                    toast("Merged $merged similar chats")
                 }
             }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton(R.string.action_cancel, null)
             .show()
+    }
+
+    private fun toast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 }

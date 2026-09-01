@@ -4,31 +4,31 @@
 
     <item
         android:id="@+id/action_debug"
-        android:title="Debug Log"
+        android:title="@string/menu_debug"
         android:orderInCategory="75"
         app:showAsAction="never" />
 
     <item
         android:id="@+id/action_green_api"
-        android:title="WhatsApp Groups (GreenAPI)"
+        android:title="@string/green_api_groups"
         android:orderInCategory="80"
         app:showAsAction="never" />
 
     <item
         android:id="@+id/action_merge_chats"
-        android:title="Merge Similar Chats"
+        android:title="@string/menu_merge_chats"
         android:orderInCategory="85"
         app:showAsAction="never" />
 
     <item
         android:id="@+id/action_clear_duplicates"
-        android:title="Clear Duplicates"
+        android:title="@string/menu_clear_duplicates"
         android:orderInCategory="90"
         app:showAsAction="never" />
 
     <item
         android:id="@+id/action_settings"
-        android:title="Settings"
+        android:title="@string/settings"
         android:orderInCategory="100"
         app:showAsAction="never" />
 

@@ -89,6 +89,14 @@ class MessageRepository(private val messageDao: MessageDao) {
         messageDao.deleteAllMessages()
     }
 
+    suspend fun getPersonalMessageCount(): Int = withContext(Dispatchers.IO) {
+        messageDao.getPersonalMessageCount()
+    }
+
+    suspend fun deletePersonalMessages(): Int = withContext(Dispatchers.IO) {
+        messageDao.deletePersonalMessages()
+    }
+
     suspend fun mergeSimilarChats(): Int = withContext(Dispatchers.IO) {
         val chatNames = messageDao.getAllChatNamesRaw()
         var mergedCount = 0

@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
+import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -39,7 +40,8 @@ class SummaryActivity : AppCompatActivity() {
 
         setSupportActionBar(binding.toolbar)
         supportActionBar?.apply {
-            title = getString(R.string.summarize) + ": " + chatName
+            title = chatName
+            subtitle = getString(R.string.summary_label)
             setDisplayHomeAsUpEnabled(true)
         }
 
@@ -61,27 +63,32 @@ class SummaryActivity : AppCompatActivity() {
     }
 
     private fun setupUI() {
-        if (!secureStorage.hasApiKey()) {
-            binding.cardNoApiKey.isVisible = true
-            binding.buttonGenerateSummary.isVisible = false
-            binding.textSummary.text = "No API key configured. Please set your OpenAI API key in Settings first."
-        } else {
-            binding.cardNoApiKey.isVisible = false
-            binding.buttonGenerateSummary.isVisible = true
+        val hasKey = secureStorage.hasApiKey()
+        binding.cardNoApiKey.isVisible = !hasKey
+        binding.buttonGenerateSummary.isVisible = hasKey
+
+        // Default to the whole day, matching the old radio-button default.
+        if (binding.toggleTimeRange.checkedButtonId == View.NO_ID) {
+            binding.toggleTimeRange.check(binding.buttonWholeDay.id)
         }
     }
 
     private fun setupListeners() {
-        // Time Range Selection
-        binding.radioGroupTimeRange.setOnCheckedChangeListener { _, checkedId ->
-            when (checkedId) {
-                binding.radioWholeDay.id -> {
-                    binding.layoutCustomRange.isVisible = false
-                }
-                binding.radioCustomRange.id -> {
-                    binding.layoutCustomRange.isVisible = true
-                }
+        // Time range segmented control
+        binding.toggleTimeRange.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (isChecked) {
+                binding.layoutCustomRange.isVisible = checkedId == binding.buttonCustomRange.id
             }
+        }
+
+        // Copy the generated summary
+        binding.buttonCopySummary.setOnClickListener {
+            val clipboard =
+                getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+            clipboard.setPrimaryClip(
+                android.content.ClipData.newPlainText(chatName, binding.textSummary.text)
+            )
+            Toast.makeText(this, getString(R.string.summary_copied), Toast.LENGTH_SHORT).show()
         }
 
         // Time Pickers
@@ -129,11 +136,10 @@ class SummaryActivity : AppCompatActivity() {
 
         val prefs = getSharedPreferences("app_settings", Context.MODE_PRIVATE)
         val inHebrew = prefs.getBoolean("hebrew_language", false)
-        val useLocalModel = prefs.getBoolean("use_local_model", false)
 
         // Calculate time range
-        val (startTime, endTime) = when (binding.radioGroupTimeRange.checkedRadioButtonId) {
-            binding.radioCustomRange.id -> {
+        val (startTime, endTime) = when (binding.toggleTimeRange.checkedButtonId) {
+            binding.buttonCustomRange.id -> {
                 val fromText = binding.editTimeFrom.text.toString()
                 val toText = binding.editTimeTo.text.toString()
                 
@@ -151,7 +157,6 @@ class SummaryActivity : AppCompatActivity() {
             chatName = chatName,
             apiKey = apiKey,
             inHebrew = inHebrew,
-            useLocalModel = useLocalModel,
             startTime = startTime,
             endTime = endTime
         )
@@ -190,10 +195,12 @@ class SummaryActivity : AppCompatActivity() {
     private fun observeViewModel() {
         viewModel.summary.observe(this) { summary ->
             binding.textSummary.text = summary
+            binding.buttonCopySummary.isVisible = !summary.isNullOrBlank()
         }
 
         viewModel.isLoading.observe(this) { isLoading ->
-            binding.progressBar.isVisible = isLoading
+            binding.layoutLoading.isVisible = isLoading
+            binding.cardSummary.isVisible = !isLoading
             binding.buttonGenerateSummary.isEnabled = !isLoading
         }
 

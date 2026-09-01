@@ -148,9 +148,7 @@ class GreenApiMessagePreviewActivity : AppCompatActivity() {
                         )
                     },
                     apiKey = apiKey,
-                    inHebrew = inHebrew,
-                    useLocalModel = false,
-                    context = this@GreenApiMessagePreviewActivity
+                    inHebrew = inHebrew
                 )
 
                 showSummaryDialog(summary)

@@ -1,9 +1,7 @@
 package com.example.whatsapp_summarizer.ui.summary
 
-import android.content.Context
 import android.util.Log
 import com.example.whatsapp_summarizer.data.model.Message
-import com.example.whatsapp_summarizer.util.LocalModelManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.*
@@ -20,75 +18,66 @@ object AiSummarizer {
     private const val OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
     private const val GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
 
+    // Output budget for the summary itself. A day of busy group chat needs far
+    // more than the 500 tokens this used to allow.
+    private const val MAX_OUTPUT_TOKENS = 4000
+
+    // Ceiling on the conversation we send up. gpt-4.1-mini has a very large
+    // context window, so this is only a guard against a pathological payload -
+    // it is not meant to trim ordinary usage. Roughly 100k tokens of chat.
+    private const val MAX_INPUT_CHARS = 400_000
+
     private val client by lazy {
+        // Body-level logging is deliberately off: it writes the entire
+        // conversation and the Authorization header into logcat.
         val logging = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = HttpLoggingInterceptor.Level.NONE
         }
         OkHttpClient.Builder()
             .addInterceptor(logging)
             .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
+            // Large payloads take time to upload and much longer to summarize.
+            .writeTimeout(120, TimeUnit.SECONDS)
+            .readTimeout(180, TimeUnit.SECONDS)
+            .callTimeout(240, TimeUnit.SECONDS)
             .build()
     }
 
     suspend fun summarizeMessages(
-        messages: List<Message>, 
+        messages: List<Message>,
         apiKey: String,
-        inHebrew: Boolean = false,
-        useLocalModel: Boolean = false,
-        context: Context? = null
+        inHebrew: Boolean = false
     ): String = withContext(Dispatchers.IO) {
         if (messages.isEmpty()) {
             return@withContext if (inHebrew) "אין הודעות לסיכום." else "No messages to summarize."
         }
 
-        val conversation = messages.joinToString("\n") { msg ->
-            "[${msg.getFormattedTime()}] ${msg.senderName}: ${msg.messageContent}"
-        }
-
-        if (useLocalModel && context != null) {
-            // Use local TFLite model
-            val localManager = LocalModelManager(context)
-            if (!localManager.isModelAvailable()) {
-                return@withContext if (inHebrew) {
-                    "מודל מקומי לא זמין. עבור להגדרות כדי לייבא מודל או השתמש ב-OpenAI."
-                } else {
-                    "Local model not available. Go to Settings to import a model or use OpenAI."
-                }
-            }
-            
-            val loadResult = localManager.loadModel()
-            loadResult.fold(
-                onSuccess = {
-                    val result = localManager.summarize(conversation, inHebrew)
-                    localManager.unloadModel()
-                    return@withContext result
-                },
-                onFailure = { error ->
-                    return@withContext if (inHebrew) {
-                        "שגיאה בטעינת המודל המקומי: ${error.message}. נסה להשתמש ב-OpenAI."
-                    } else {
-                        "Failed to load local model: ${error.message}. Try using OpenAI."
-                    }
-                }
-            )
-        }
+        val (conversation, droppedCount) = buildConversation(messages)
 
         // Use cloud API (OpenAI or Gemini)
+        val truncationNote = when {
+            droppedCount <= 0 -> ""
+            inHebrew -> "(שים לב: $droppedCount ההודעות הראשונות הושמטו בגלל אורך השיחה.)" + "\n\n"
+            else -> "(Note: the oldest $droppedCount messages were omitted because the conversation was very long.)" + "\n\n"
+        }
+
         val prompt = if (inHebrew) {
             """
                 אנא סכם את השיחה הבאה בוואטסאפ בעברית.
-                ספק סיכום תמציתי של הנושאים המרכזיים שנדונו ושל החלטות או משימות חשובות.
-                
-                שיחה:
+                סכם את כל השיחה - אל תדלג על נושאים. עבור כל נושא שנדון, ציין מי אמר מה כשזה חשוב.
+                בסוף הסיכום הוסף רשימת החלטות ומשימות פתוחות, אם יש כאלה.
+
+                $truncationNote שיחה:
                 $conversation
             """.trimIndent()
         } else {
             """
-                Please summarize the following WhatsApp conversation. 
-                Provide a concise summary of the main topics discussed and any important decisions or action items.
-                
-                Conversation:
+                Please summarize the following WhatsApp conversation.
+                Cover the whole conversation - do not skip topics. For each topic discussed,
+                attribute points to the people who made them where that matters.
+                End with a list of decisions made and any open action items.
+
+                $truncationNote Conversation:
                 $conversation
             """.trimIndent()
         }
@@ -98,6 +87,41 @@ object AiSummarizer {
         } else {
             summarizeWithGemini(prompt, apiKey, inHebrew)
         }
+    }
+
+    /**
+     * Renders the messages into the transcript we send to the model.
+     *
+     * The whole conversation goes up unless it would exceed [MAX_INPUT_CHARS]; if it
+     * would, the OLDEST messages are dropped so the most recent context survives.
+     * Returns the transcript together with the number of messages left out.
+     */
+    private fun buildConversation(messages: List<Message>): Pair<String, Int> {
+        val lines = messages.map { msg ->
+            "[${msg.getFormattedTime()}] ${msg.senderName}: ${msg.messageContent}"
+        }
+
+        val total = lines.sumOf { it.length + 1 }
+        if (total <= MAX_INPUT_CHARS) {
+            return lines.joinToString("\n") to 0
+        }
+
+        // Walk backwards from the newest message until the budget is spent.
+        var used = 0
+        var firstKept = lines.size
+        for (i in lines.indices.reversed()) {
+            val cost = lines[i].length + 1
+            if (used + cost > MAX_INPUT_CHARS) break
+            used += cost
+            firstKept = i
+        }
+
+        val kept = lines.subList(firstKept, lines.size)
+        Log.w(
+            "AiSummarizer",
+            "Conversation trimmed: sent ${kept.size} of ${lines.size} messages ($used chars)"
+        )
+        return kept.joinToString("\n") to firstKept
     }
 
     private fun summarizeWithOpenAI(prompt: String, apiKey: String, inHebrew: Boolean): String {
@@ -119,7 +143,7 @@ object AiSummarizer {
                     put("content", prompt)
                 })
             })
-            put("max_tokens", 500)
+            put("max_tokens", MAX_OUTPUT_TOKENS)
             put("temperature", 0.7)
         }
 
@@ -168,6 +192,9 @@ object AiSummarizer {
                         })
                     })
                 })
+            })
+            put("generationConfig", JSONObject().apply {
+                put("maxOutputTokens", MAX_OUTPUT_TOKENS)
             })
         }
 

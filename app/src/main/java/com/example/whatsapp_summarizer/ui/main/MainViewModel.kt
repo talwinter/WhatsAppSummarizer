@@ -96,4 +96,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun loadChatCounts() {
         refreshCounts()
     }
+
+    /** Reports how many personal-chat messages are still stored from before the fix. */
+    fun countPersonalMessages(callback: (Int) -> Unit) {
+        viewModelScope.launch {
+            callback(repository.getPersonalMessageCount())
+        }
+    }
+
+    fun deletePersonalMessages(callback: (Int) -> Unit) {
+        viewModelScope.launch {
+            callback(repository.deletePersonalMessages())
+        }
+    }
 }

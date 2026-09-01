@@ -13,7 +13,10 @@ object NotificationDebugLog {
         val parsedSender: String,
         val parsedMessage: String,
         val action: String, // "SAVED", "SKIPPED", "DUPLICATE"
-        val reason: String = ""
+        val reason: String = "",
+        // Raw group-detection signals from the notification extras. Lets us tell
+        // why a chat was classified as group vs. personal without a debugger.
+        val signals: String = ""
     )
     
     private val logs = ArrayDeque<LogEntry>(100)

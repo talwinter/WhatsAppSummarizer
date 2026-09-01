@@ -13,7 +13,6 @@ import java.util.*
 class SummaryViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = (application as com.example.whatsapp_summarizer.WhatsAppSummarizerApp).repository
-    private val appContext = application
     
     private val _summary = MutableLiveData<String>()
     val summary: LiveData<String> = _summary
@@ -28,7 +27,6 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
         chatName: String, 
         apiKey: String,
         inHebrew: Boolean = false,
-        useLocalModel: Boolean = false,
         startTime: Long? = null,
         endTime: Long? = null
     ) {
@@ -53,13 +51,7 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
                     return@launch
                 }
 
-                val summary = AiSummarizer.summarizeMessages(
-                    messages, 
-                    apiKey, 
-                    inHebrew,
-                    useLocalModel,
-                    appContext
-                )
+                val summary = AiSummarizer.summarizeMessages(messages, apiKey, inHebrew)
                 _summary.value = summary
             } catch (e: Exception) {
                 val errorMsg = when {

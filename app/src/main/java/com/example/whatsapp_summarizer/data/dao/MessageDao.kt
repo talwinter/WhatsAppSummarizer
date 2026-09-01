@@ -58,4 +58,11 @@ interface MessageDao {
 
     @Query("DELETE FROM messages")
     suspend fun deleteAllMessages(): Int
+
+    @Query("SELECT COUNT(*) FROM messages WHERE isGroup = 0")
+    suspend fun getPersonalMessageCount(): Int
+
+    /** Purges personal (non-group) chats captured before group detection was fixed. */
+    @Query("DELETE FROM messages WHERE isGroup = 0")
+    suspend fun deletePersonalMessages(): Int
 }

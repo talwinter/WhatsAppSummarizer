@@ -23,7 +23,6 @@ class WhatsAppNotificationService : NotificationListenerService() {
     private val recentMessages = ConcurrentHashMap<String, Long>()
     private val DEDUPLICATION_WINDOW_MS = 10000L // 10 seconds
     private val MAX_RECENT_MESSAGES = 100
-    private val MAX_NAME_LENGTH = 30
 
     companion object {
         private const val TAG = "WhatsAppService"
@@ -135,11 +134,24 @@ class WhatsAppNotificationService : NotificationListenerService() {
                 return
             }
 
-            // Determine if it's a group chat
-            val isGroup = isGroupChat(title, text, extras)
+            // Ask the platform's own MessagingStyle signals whether this is a group.
+            val inspection = NotificationInspector.inspect(title, text, bigText, extras)
+            val isGroup = inspection.isGroup
+            val chatName = inspection.chatName
+            val senderName = inspection.senderName
+            val messageContent = inspection.messageContent
+            val signals = "${inspection.signal} :: ${inspection.diagnostics}"
 
-            // Extract chat name and sender
-            val (chatName, senderName, messageContent) = parseNotification(title, text, bigText, extras, isGroup)
+            // Personal conversations are never stored. Dropping them here rather than
+            // filtering at query time is what keeps them out of the database entirely.
+            if (!isGroup && groupsOnly()) {
+                logSkipped(
+                    title, text,
+                    "Not a group conversation - personal chats are not captured",
+                    chatName, senderName, messageContent, signals
+                )
+                return
+            }
 
             if (chatName.isNotBlank() && messageContent.isNotBlank()) {
                 // Normalize chat name
@@ -147,7 +159,7 @@ class WhatsAppNotificationService : NotificationListenerService() {
                 
                 // Check for duplicates
                 if (isDuplicate(normalizedChatName, senderName, messageContent)) {
-                    logSkipped(title, text, "Duplicate: $normalizedChatName | $senderName", normalizedChatName, senderName, messageContent)
+                    logSkipped(title, text, "Duplicate: $normalizedChatName | $senderName", normalizedChatName, senderName, messageContent, signals)
                     return
                 }
 
@@ -162,21 +174,21 @@ class WhatsAppNotificationService : NotificationListenerService() {
                 scope.launch {
                     try {
                         repository.insertMessage(message)
-                        logSaved(title, text, normalizedChatName, senderName, messageContent)
+                        logSaved(title, text, normalizedChatName, senderName, messageContent, signals)
                     } catch (e: Exception) {
                         Log.e(TAG, "Failed to save message", e)
-                        logSkipped(title, text, "DB Error: ${e.message}", normalizedChatName, senderName, messageContent)
+                        logSkipped(title, text, "DB Error: ${e.message}", normalizedChatName, senderName, messageContent, signals)
                     }
                 }
             } else {
-                logSkipped(title, text, "Empty chatName or messageContent")
+                logSkipped(title, text, "Empty chatName or messageContent", signals = signals)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error processing notification", e)
         }
     }
 
-    private fun logSaved(rawTitle: String, rawText: String, chatName: String, sender: String, message: String) {
+    private fun logSaved(rawTitle: String, rawText: String, chatName: String, sender: String, message: String, signals: String = "") {
         com.example.whatsapp_summarizer.util.NotificationDebugLog.add(
             com.example.whatsapp_summarizer.util.NotificationDebugLog.LogEntry(
                 timestamp = System.currentTimeMillis(),
@@ -186,12 +198,13 @@ class WhatsAppNotificationService : NotificationListenerService() {
                 parsedSender = sender,
                 parsedMessage = message,
                 action = "SAVED",
-                reason = "Message saved to database"
+                reason = "Message saved to database",
+                signals = signals
             )
         )
     }
 
-    private fun logSkipped(rawTitle: String, rawText: String, reason: String, chatName: String = "", sender: String = "", message: String = "") {
+    private fun logSkipped(rawTitle: String, rawText: String, reason: String, chatName: String = "", sender: String = "", message: String = "", signals: String = "") {
         com.example.whatsapp_summarizer.util.NotificationDebugLog.add(
             com.example.whatsapp_summarizer.util.NotificationDebugLog.LogEntry(
                 timestamp = System.currentTimeMillis(),
@@ -201,11 +214,23 @@ class WhatsAppNotificationService : NotificationListenerService() {
                 parsedSender = sender,
                 parsedMessage = message,
                 action = "SKIPPED",
-                reason = reason
+                reason = reason,
+                signals = signals
             )
         )
     }
     
+    /**
+     * Whether to capture group chats only. On by default; the toggle exists so the
+     * user can fall back to capturing everything if group detection ever misfires.
+     */
+    private fun groupsOnly(): Boolean {
+        val prefs = applicationContext.getSharedPreferences(
+            "app_settings", android.content.Context.MODE_PRIVATE
+        )
+        return prefs.getBoolean("groups_only", true)
+    }
+
     private fun normalizeChatName(name: String): String {
         return com.example.whatsapp_summarizer.util.ChatNameNormalizer.normalize(name)
     }
@@ -241,93 +266,6 @@ class WhatsAppNotificationService : NotificationListenerService() {
         }
         
         return false
-    }
-
-    private fun isGroupChat(title: String, text: String, extras: android.os.Bundle): Boolean {
-        val androidTextLines = extras.getCharSequenceArray(Notification.EXTRA_TEXT_LINES)
-        
-        // If text contains a colon and doesn't start with title, it's likely a group
-        if (text.contains(":") && !text.startsWith(title)) {
-            return true
-        }
-        
-        // If title contains ": " it might be "Group Name: Sender Name" format
-        if (title.contains(": ")) {
-            return true
-        }
-        
-        // Check if there are multiple lines (group messages often have multiple lines)
-        if (androidTextLines != null && androidTextLines.size > 1) {
-            return true
-        }
-        
-        return false
-    }
-
-    private fun parseNotification(
-        title: String,
-        text: String,
-        bigText: String?,
-        extras: android.os.Bundle,
-        isGroup: Boolean
-    ): Triple<String, String, String> {
-        var chatName = title.trim()
-        var senderName = title.trim()
-        var messageContent = text.trim()
-
-        if (isGroup) {
-            // Check if title is in "Group: Sender" format
-            if (title.contains(": ")) {
-                val colonIndex = title.indexOf(": ")
-                if (colonIndex > 0) {
-                    chatName = title.substring(0, colonIndex).trim()
-                    senderName = title.substring(colonIndex + 2).trim()
-                    messageContent = text.trim()
-                    return Triple(chatName, senderName, messageContent)
-                }
-            }
-            
-            // Standard format: Title is group name, text is "Sender: message"
-            chatName = title.trim()
-            
-            // Try to extract sender from text (format: "Sender: message")
-            if (text.contains(":")) {
-                val colonIndex = text.indexOf(":")
-                if (colonIndex > 0 && colonIndex < MAX_NAME_LENGTH) {
-                    senderName = text.substring(0, colonIndex).trim()
-                    messageContent = text.substring(colonIndex + 1).trim()
-                }
-            } else if (!bigText.isNullOrBlank() && bigText.contains(":")) {
-                val colonIndex = bigText.indexOf(":")
-                if (colonIndex > 0 && colonIndex < MAX_NAME_LENGTH) {
-                    senderName = bigText.substring(0, colonIndex).trim()
-                }
-            }
-            
-            // If sender is still the title, try to extract from big text or use fallback
-            if (senderName == chatName) {
-                if (!bigText.isNullOrBlank() && bigText.contains(":")) {
-                    val colonIndex = bigText.indexOf(":")
-                    if (colonIndex > 0 && colonIndex < MAX_NAME_LENGTH) {
-                        senderName = bigText.substring(0, colonIndex).trim()
-                    } else {
-                        senderName = "Unknown"
-                    }
-                } else {
-                    senderName = "Unknown"
-                }
-            }
-        } else {
-            // For individual chats:
-            chatName = title.trim()
-            senderName = title.trim()
-            messageContent = text.trim()
-        }
-
-        // Clean up common WhatsApp notification artifacts
-        messageContent = messageContent.replace("\\n", "\n").trim()
-        
-        return Triple(chatName, senderName, messageContent)
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification?) {

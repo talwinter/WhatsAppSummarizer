@@ -1,36 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Dark Theme Colors -->
-    <color name="background_dark">#FF121212</color>
-    <color name="surface_dark">#FF1E1E1E</color>
-    <color name="surface_variant">#FF2C2C2C</color>
-    
+    <!--
+        Dark "ink" palette. Surfaces step up in lightness with elevation instead of
+        relying on shadows, which is what makes the flat cards read as layered.
+        Existing names are kept (and re-toned) so every screen picks up the refresh.
+    -->
+
+    <!-- Base surfaces, lightest-last -->
+    <color name="background_dark">#FF0B0F14</color>
+    <color name="surface_dark">#FF141A21</color>
+    <color name="surface_variant">#FF1D252E</color>
+    <color name="surface_high">#FF26303B</color>
+    <color name="outline">#FF2F3B47</color>
+    <color name="scrim">#CC000000</color>
+
     <!-- Chat Colors -->
-    <color name="chat_background">#FF0F1419</color>
-    <color name="message_bubble_received">#FF2C3E50</color>
-    <color name="message_bubble_sent">#FF1B5E20</color>
-    <color name="message_text">#FFFFFFFF</color>
-    <color name="message_time">#FFB0BEC5</color>
-    <color name="sender_name">#FF81C784</color>
-    <color name="date_separator_bg">#FF37474F</color>
-    <color name="date_separator_text">#FFFFFFFF</color>
-    
+    <color name="chat_background">#FF0B0F14</color>
+    <color name="message_bubble_received">#FF1D252E</color>
+    <color name="message_bubble_sent">#FF10462A</color>
+    <color name="message_text">#FFF2F5F7</color>
+    <color name="message_time">#FF7C8A97</color>
+    <color name="sender_name">#FF25D366</color>
+    <color name="date_separator_bg">#FF1D252E</color>
+    <color name="date_separator_text">#FF9AA8B5</color>
+
     <!-- Accent Colors -->
-    <color name="primary">#FF4CAF50</color>
-    <color name="primary_dark">#FF388E3C</color>
-    <color name="accent">#FF69F0AE</color>
-    <color name="error">#FFCF6679</color>
-    <color name="warning">#FFFFB74D</color>
-    
+    <color name="primary">#FF25D366</color>
+    <color name="primary_dark">#FF1DA851</color>
+    <color name="primary_container">#FF11351F</color>
+    <color name="on_primary">#FF05140A</color>
+    <color name="accent">#FF4DD9E8</color>
+    <color name="accent_container">#FF10333A</color>
+    <color name="error">#FFFF6B6B</color>
+    <color name="error_container">#FF3A1618</color>
+    <color name="warning">#FFFFC46B</color>
+    <color name="warning_container">#FF3A2A12</color>
+
     <!-- Text Colors -->
-    <color name="text_primary">#FFFFFFFF</color>
-    <color name="text_secondary">#FFB0BEC5</color>
-    <color name="text_hint">#FF78909C</color>
-    
+    <color name="text_primary">#FFF2F5F7</color>
+    <color name="text_secondary">#FF9AA8B5</color>
+    <color name="text_hint">#FF6B7A88</color>
+
     <!-- Card & Divider -->
-    <color name="card_background">#FF1E1E1E</color>
-    <color name="divider">#FF2C2C2C</color>
-    
+    <color name="card_background">#FF141A21</color>
+    <color name="divider">#FF232D38</color>
+
+    <!--
+        Avatar tints, picked by hashing the chat name so a group keeps the same
+        colour between launches. Muted enough to sit under white initials.
+    -->
+    <color name="avatar_1">#FF2E7D5B</color>
+    <color name="avatar_2">#FF2C6E9B</color>
+    <color name="avatar_3">#FF7A4E9E</color>
+    <color name="avatar_4">#FFA05A2C</color>
+    <color name="avatar_5">#FF9B2F55</color>
+    <color name="avatar_6">#FF3F6E8C</color>
+
     <!-- Legacy colors for compatibility -->
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>

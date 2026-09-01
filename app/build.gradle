@@ -61,10 +61,4 @@ dependencies {
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
     implementation 'androidx.work:work-runtime-ktx:2.9.0'
-    
-    // TensorFlow Lite for local model
-    implementation 'org.tensorflow:tensorflow-lite:2.14.0'
-    implementation 'org.tensorflow:tensorflow-lite-support:0.4.4'
-    implementation 'org.tensorflow:tensorflow-lite-metadata:0.4.4'
-    implementation 'org.tensorflow:tensorflow-lite-select-tf-ops:2.14.0'
 }

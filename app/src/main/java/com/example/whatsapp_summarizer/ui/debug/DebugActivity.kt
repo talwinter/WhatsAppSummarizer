@@ -106,6 +106,9 @@ class DebugActivity : AppCompatActivity() {
             if (entry.parsedMessage.isNotBlank()) {
                 sb.append("  Message: '${entry.parsedMessage.take(100)}'\n")
             }
+            if (entry.signals.isNotBlank()) {
+                sb.append("  Signals: ${entry.signals}\n")
+            }
             sb.append("\n")
         }
         
@@ -198,6 +201,9 @@ class DebugLogAdapter : RecyclerView.Adapter<DebugLogAdapter.ViewHolder>() {
             }
             if (entry.parsedMessage.isNotBlank()) {
                 details.append("\nMsg: '${entry.parsedMessage.take(50)}'")
+            }
+            if (entry.signals.isNotBlank()) {
+                details.append("\nSignals: ${entry.signals}")
             }
             
             text2.text = details.toString()

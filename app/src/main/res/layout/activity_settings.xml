@@ -210,7 +210,7 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- AI Provider Card -->
+            <!-- Message Capture Card -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -228,82 +228,58 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🤖 AI Provider"
+                        android:text="@string/capture_section"
                         android:textSize="20sp"
                         android:textStyle="bold"
                         android:textColor="@color/text_primary" />
 
-                    <RadioGroup
-                        android:id="@+id/radioGroupAiProvider"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:orientation="vertical">
-
-                        <RadioButton
-                            android:id="@+id/radioOpenai"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/use_openai"
-                            android:textColor="@color/text_primary"
-                            android:checked="true" />
-
-                        <RadioButton
-                            android:id="@+id/radioLocal"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/use_local"
-                            android:textColor="@color/text_primary" />
-
-                    </RadioGroup>
-
-                    <!-- Local Model Controls -->
                     <LinearLayout
-                        android:id="@+id/layoutLocalModel"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginTop="12dp"
-                        android:padding="12dp"
-                        android:background="@color/surface_variant"
-                        android:visibility="visible">
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginTop="16dp">
 
-                        <TextView
-                            android:id="@+id/textModelStatus"
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/groups_only"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/groups_only_description"
+                                android:textSize="13sp"
+                                android:lineSpacingMultiplier="1.2"
+                                android:textColor="@color/text_secondary" />
+
+                        </LinearLayout>
+
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchGroupsOnly"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/model_status"
-                            android:textSize="14sp"
-                            android:textColor="@color/text_secondary" />
-
-                        <ProgressBar
-                            android:id="@+id/progressImport"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-                            android:visibility="gone" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/buttonImportModel"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="@string/import_model"
-                            app:backgroundTint="@color/primary" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/buttonDeleteModel"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="@string/delete_model"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                            android:textColor="@color/error"
-                            app:strokeColor="@color/error"
-                            android:visibility="gone" />
+                            android:layout_marginStart="12dp" />
 
                     </LinearLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/buttonPurgePersonal"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="@string/purge_personal"
+                        app:cornerRadius="12dp" />
 
                 </LinearLayout>
 
