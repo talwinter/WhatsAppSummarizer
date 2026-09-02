@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.whatsapp_summarizer.R
 import com.example.whatsapp_summarizer.databinding.ActivityMainBinding
 import com.example.whatsapp_summarizer.feature.ask.AskActivity
+import com.example.whatsapp_summarizer.feature.digest.DigestActivity
 import com.example.whatsapp_summarizer.feature.questions.OpenQuestionsActivity
 import com.example.whatsapp_summarizer.ui.debug.DebugActivity
 import com.example.whatsapp_summarizer.ui.greenapi.GreenApiChatListActivity
@@ -233,6 +234,10 @@ class MainActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.action_settings -> {
                 startActivity(Intent(this, SettingsActivity::class.java))
+                true
+            }
+            R.id.action_digest -> {
+                startActivity(Intent(this, DigestActivity::class.java))
                 true
             }
             R.id.action_ask -> {

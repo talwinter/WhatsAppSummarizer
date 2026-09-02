@@ -102,4 +102,13 @@
         <item quantity="one">From %d message</item>
         <item quantity="other">From %d messages</item>
     </plurals>
+    <string name="digest_title">Daily digest</string>
+    <string name="digest_section">📅 Daily Digest</string>
+    <string name="digest_description">One quiet notification a day summarizing every group, so you can catch up in thirty seconds instead of scrolling nine chats.</string>
+    <string name="digest_time_label">Delivered at %1$s</string>
+    <string name="digest_notification_title">Your day across %1$d groups</string>
+    <string name="digest_empty_title">No digest yet</string>
+    <string name="digest_empty_body">Turn on the daily digest in Settings and it will appear here after the first one is delivered.</string>
+    <string name="digest_scheduled">Digest scheduled for %1$s</string>
+    <string name="digest_off">Daily digest turned off</string>
 </resources>

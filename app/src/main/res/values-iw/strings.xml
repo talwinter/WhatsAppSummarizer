@@ -106,4 +106,13 @@
         <item quantity="many">מתוך %d הודעות</item>
         <item quantity="other">מתוך %d הודעות</item>
     </plurals>
+    <string name="digest_title">תקציר יומי</string>
+    <string name="digest_section">📅 תקציר יומי</string>
+    <string name="digest_description">התראה שקטה אחת ביום שמסכמת את כל הקבוצות, כדי להתעדכן בחצי דקה במקום לגלול תשע שיחות.</string>
+    <string name="digest_time_label">נשלח בשעה %1$s</string>
+    <string name="digest_notification_title">היום שלך ב-%1$d קבוצות</string>
+    <string name="digest_empty_title">עדיין אין תקציר</string>
+    <string name="digest_empty_body">הפעל את התקציר היומי בהגדרות והוא יופיע כאן אחרי המשלוח הראשון.</string>
+    <string name="digest_scheduled">התקציר נקבע לשעה %1$s</string>
+    <string name="digest_off">התקציר היומי כובה</string>
 </resources>

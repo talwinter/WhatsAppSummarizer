@@ -14,6 +14,8 @@ import androidx.core.widget.doAfterTextChanged
 import com.example.whatsapp_summarizer.R
 import com.example.whatsapp_summarizer.databinding.ActivitySettingsBinding
 import com.example.whatsapp_summarizer.feature.alerts.AlertSettings
+import com.example.whatsapp_summarizer.feature.digest.DigestSettings
+import com.example.whatsapp_summarizer.feature.digest.DigestWorker
 import com.example.whatsapp_summarizer.util.SecureStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,6 +27,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySettingsBinding
     private lateinit var secureStorage: SecureStorage
     private lateinit var alertSettings: AlertSettings
+    private lateinit var digestSettings: DigestSettings
 
     /**
      * Android 13+ requires POST_NOTIFICATIONS before we can reach the user. Asked
@@ -58,6 +61,7 @@ class SettingsActivity : AppCompatActivity() {
 
         secureStorage = SecureStorage(this)
         alertSettings = AlertSettings(this)
+        digestSettings = DigestSettings(this)
 
         setupUI()
         setupListeners()
@@ -84,6 +88,10 @@ class SettingsActivity : AppCompatActivity() {
 
         // Groups-only capture (default on)
         binding.switchGroupsOnly.isChecked = prefs.getBoolean("groups_only", true)
+
+        // Daily digest
+        binding.switchDigest.isChecked = digestSettings.enabled
+        updateDigestTimeLabel()
 
         // Smart alerts
         binding.switchAlerts.isChecked = alertSettings.enabled
@@ -144,6 +152,47 @@ class SettingsActivity : AppCompatActivity() {
                 "Personal conversations will be captured too"
             }
             Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+        }
+
+        // Daily digest on/off
+        binding.switchDigest.setOnCheckedChangeListener { _, isChecked ->
+            digestSettings.enabled = isChecked
+            DigestWorker.rescheduleNow(this)
+            if (isChecked) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    requestNotificationPermission.launch(
+                        android.Manifest.permission.POST_NOTIFICATIONS
+                    )
+                }
+                if (!secureStorage.hasApiKey()) {
+                    Toast.makeText(this, getString(R.string.alerts_need_key), Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(
+                        this,
+                        getString(R.string.digest_scheduled, digestSettings.formattedTime()),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            } else {
+                Toast.makeText(this, getString(R.string.digest_off), Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Digest delivery time
+        binding.buttonDigestTime.setOnClickListener {
+            android.app.TimePickerDialog(
+                this,
+                { _, hour, minute ->
+                    digestSettings.hour = hour
+                    digestSettings.minute = minute
+                    updateDigestTimeLabel()
+                    // UPDATE, so a new time takes effect today rather than tomorrow.
+                    DigestWorker.rescheduleNow(this)
+                },
+                digestSettings.hour,
+                digestSettings.minute,
+                true
+            ).show()
         }
 
         // Smart alerts on/off
@@ -256,6 +305,11 @@ class SettingsActivity : AppCompatActivity() {
      * until deleted. This is destructive, so it is always confirmed and never runs
      * automatically on upgrade.
      */
+    private fun updateDigestTimeLabel() {
+        binding.buttonDigestTime.text =
+            getString(R.string.digest_time_label, digestSettings.formattedTime())
+    }
+
     private fun confirmPurgePersonal() {
         val repository =
             (application as com.example.whatsapp_summarizer.WhatsAppSummarizerApp).repository

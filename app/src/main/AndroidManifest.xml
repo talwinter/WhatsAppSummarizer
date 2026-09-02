@@ -55,6 +55,11 @@
             android:parentActivityName=".ui.greenapi.GreenApiChatListActivity" />
 
         <activity
+            android:name=".feature.digest.DigestActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.main.MainActivity" />
+
+        <activity
             android:name=".feature.ask.AskActivity"
             android:exported="false"
             android:parentActivityName=".ui.main.MainActivity" />
