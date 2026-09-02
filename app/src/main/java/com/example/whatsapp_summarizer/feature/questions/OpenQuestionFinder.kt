@@ -19,6 +19,8 @@ object OpenQuestionFinder {
     private const val MAX_OUTPUT_TOKENS = 1500
 
     data class OpenQuestion(
+        /** Row id of the asking message, so tapping it can jump to that exact line. */
+        val messageId: Long,
         val chatName: String,
         val senderName: String,
         val question: String,
@@ -100,6 +102,7 @@ object OpenQuestionFinder {
             val summary = item.optString("summary", "").trim()
             found.add(
                 OpenQuestion(
+                    messageId = source.id,
                     chatName = chatName,
                     senderName = source.senderName,
                     // Fall back to the raw message if the model gave us nothing usable.

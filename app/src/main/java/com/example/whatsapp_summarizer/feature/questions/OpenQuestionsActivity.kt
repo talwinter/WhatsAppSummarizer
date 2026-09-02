@@ -48,10 +48,15 @@ class OpenQuestionsActivity : AppCompatActivity() {
         }
 
         adapter = OpenQuestionAdapter { question ->
+            // Same jump the Ask sources use: land on the asking message and
+            // highlight it, rather than dropping the user at the end of the chat.
             startActivity(
                 Intent(this, ChatActivity::class.java).apply {
-                    putExtra("CHAT_NAME", question.chatName)
-                    putStringArrayListExtra("CHAT_VARIATIONS", arrayListOf(question.chatName))
+                    putExtra(ChatActivity.EXTRA_CHAT_NAME, question.chatName)
+                    putStringArrayListExtra(
+                        ChatActivity.EXTRA_CHAT_VARIATIONS, arrayListOf(question.chatName)
+                    )
+                    putExtra(ChatActivity.EXTRA_MESSAGE_ID, question.messageId)
                 }
             )
         }
@@ -160,7 +165,7 @@ private class OpenQuestionAdapter(
         override fun areItemsTheSame(
             oldItem: OpenQuestionFinder.OpenQuestion,
             newItem: OpenQuestionFinder.OpenQuestion
-        ) = oldItem.chatName == newItem.chatName && oldItem.timestamp == newItem.timestamp
+        ) = oldItem.messageId == newItem.messageId
 
         override fun areContentsTheSame(
             oldItem: OpenQuestionFinder.OpenQuestion,
