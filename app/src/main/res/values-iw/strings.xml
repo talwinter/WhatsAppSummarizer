@@ -115,4 +115,10 @@
     <string name="digest_empty_body">הפעל את התקציר היומי בהגדרות והוא יופיע כאן אחרי המשלוח הראשון.</string>
     <string name="digest_scheduled">התקציר נקבע לשעה %1$s</string>
     <string name="digest_off">התקציר היומי כובה</string>
+    <string name="ask_sources_header">מקורות</string>
+    <string name="ask_sources_hint">הקש על מקור כדי לדלג להודעה בקבוצה.</string>
+    <string name="jump_to_latest">העדכני</string>
+    <string name="date_today">היום</string>
+    <string name="date_yesterday">אתמול</string>
+    <string name="chat_missing">לא נבחרה שיחה</string>
 </resources>

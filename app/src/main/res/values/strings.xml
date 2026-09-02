@@ -111,4 +111,10 @@
     <string name="digest_empty_body">Turn on the daily digest in Settings and it will appear here after the first one is delivered.</string>
     <string name="digest_scheduled">Digest scheduled for %1$s</string>
     <string name="digest_off">Daily digest turned off</string>
+    <string name="ask_sources_header">Sources</string>
+    <string name="ask_sources_hint">Tap one to jump to that message in the group.</string>
+    <string name="jump_to_latest">Latest</string>
+    <string name="date_today">Today</string>
+    <string name="date_yesterday">Yesterday</string>
+    <string name="chat_missing">No chat selected</string>
 </resources>

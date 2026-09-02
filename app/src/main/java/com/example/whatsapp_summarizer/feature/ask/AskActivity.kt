@@ -4,18 +4,27 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.os.Bundle
+import android.content.Intent
+import android.content.res.ColorStateList
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import com.example.whatsapp_summarizer.R
 import com.example.whatsapp_summarizer.WhatsAppSummarizerApp
 import com.example.whatsapp_summarizer.databinding.ActivityAskBinding
+import com.example.whatsapp_summarizer.databinding.ItemAskSourceBinding
+import com.example.whatsapp_summarizer.ui.group.ChatActivity
+import com.example.whatsapp_summarizer.util.AvatarPalette
 import com.example.whatsapp_summarizer.util.SecureStorage
 import com.google.android.material.chip.Chip
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * Asks a question across every captured group at once.
@@ -92,9 +101,10 @@ class AskActivity : AppCompatActivity() {
 
                 binding.textAnswer.text = answer.text
                 binding.textSourceCount.text = resources.getQuantityString(
-                    R.plurals.ask_source_count, answer.sourcesUsed, answer.sourcesUsed
+                    R.plurals.ask_source_count, answer.sourcesConsidered, answer.sourcesConsidered
                 )
                 binding.cardAnswer.isVisible = true
+                renderSources(answer.citations)
             } catch (e: Exception) {
                 Toast.makeText(
                     this@AskActivity,
@@ -110,7 +120,61 @@ class AskActivity : AppCompatActivity() {
     private fun setLoading(loading: Boolean) {
         binding.layoutLoading.isVisible = loading
         binding.buttonAsk.isEnabled = !loading
-        if (loading) binding.cardAnswer.isVisible = false
+        if (loading) {
+            binding.cardAnswer.isVisible = false
+            binding.layoutSources.isVisible = false
+        }
+    }
+
+    /**
+     * Builds a card per cited message. Tapping one opens that group's transcript
+     * scrolled to - and briefly highlighting - the exact line, which is what turns
+     * an answer from something you have to trust into something you can check.
+     */
+    private fun renderSources(citations: List<AskEngine.Citation>) {
+        binding.containerSources.removeAllViews()
+        binding.layoutSources.isVisible = citations.isNotEmpty()
+        if (citations.isEmpty()) return
+
+        val format = SimpleDateFormat("d MMM HH:mm", Locale.getDefault())
+
+        citations.forEach { citation ->
+            val item = ItemAskSourceBinding.inflate(
+                layoutInflater, binding.containerSources, false
+            )
+            val message = citation.message
+
+            item.textSourceMeta.text = listOf(
+                message.senderName,
+                message.chatName,
+                format.format(Date(message.timestamp))
+            ).joinToString(" · ")
+
+            item.textSourceQuote.text = message.messageContent
+
+            item.textSourceNote.isVisible = citation.note.isNotBlank()
+            item.textSourceNote.text = citation.note
+
+            item.textAvatar.text = AvatarPalette.initialsFor(message.senderName)
+            item.avatarBackground.backgroundTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(this, AvatarPalette.colorFor(message.senderName))
+            )
+
+            item.root.setOnClickListener { openInTranscript(message) }
+            binding.containerSources.addView(item.root)
+        }
+    }
+
+    private fun openInTranscript(message: com.example.whatsapp_summarizer.data.model.Message) {
+        startActivity(
+            Intent(this, ChatActivity::class.java).apply {
+                putExtra(ChatActivity.EXTRA_CHAT_NAME, message.chatName)
+                putStringArrayListExtra(
+                    ChatActivity.EXTRA_CHAT_VARIATIONS, arrayListOf(message.chatName)
+                )
+                putExtra(ChatActivity.EXTRA_MESSAGE_ID, message.id)
+            }
+        )
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

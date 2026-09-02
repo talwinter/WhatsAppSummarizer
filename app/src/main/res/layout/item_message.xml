@@ -1,63 +1,135 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    A transcript row, not a chat bubble.
+
+    These are captured messages the user reads back, not a conversation they are
+    taking part in, so the log/transcript metaphor fits better than facing bubbles -
+    and it gives long Hebrew text the full width instead of a narrow column.
+    Consecutive messages from one sender share a single header.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:paddingHorizontal="12dp"
-    android:paddingVertical="2dp">
+    android:orientation="vertical">
 
-    <!-- Date Separator -->
-    <TextView
-        android:id="@+id/textDateSeparator"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginVertical="12dp"
-        android:background="@drawable/date_separator_background"
-        android:paddingHorizontal="12dp"
-        android:paddingVertical="4dp"
-        android:textSize="12sp"
-        android:textColor="@color/date_separator_text"
-        android:visibility="gone" />
-
-    <!-- Message Container -->
+    <!-- Date separator: a rule with the date sitting on it -->
     <LinearLayout
-        android:id="@+id/messageContainer"
-        android:layout_width="wrap_content"
+        android:id="@+id/layoutDateSeparator"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="start"
-        android:orientation="vertical"
-        android:background="@drawable/message_background_received"
-        android:padding="12dp"
-        android:layout_marginEnd="48dp"
-        android:elevation="1dp">
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="12dp"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1"
+            android:background="@color/divider" />
 
         <TextView
-            android:id="@+id/textSenderName"
+            android:id="@+id/textDateSeparator"
+            style="@style/Text.Label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            android:textColor="@color/sender_name"
-            android:layout_marginBottom="4dp" />
+            android:paddingHorizontal="12dp"
+            tools:text="2 September" />
 
-        <TextView
-            android:id="@+id/textMessageContent"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="15sp"
-            android:textColor="@color/message_text"
-            android:lineSpacingMultiplier="1.2" />
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1"
+            android:background="@color/divider" />
 
-        <TextView
-            android:id="@+id/textTimestamp"
-            android:layout_width="wrap_content"
+    </LinearLayout>
+
+    <!-- The row itself. Highlighted when arrived at from an Ask citation. -->
+    <LinearLayout
+        android:id="@+id/messageRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="3dp">
+
+        <!-- Gutter: avatar on a sender's first message, blank on the rest -->
+        <FrameLayout
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_marginEnd="12dp">
+
+            <View
+                android:id="@+id/avatarBackground"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/circle_avatar_background" />
+
+            <TextView
+                android:id="@+id/textAvatar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:textColor="@color/white"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                tools:text="MS" />
+
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:layout_marginTop="4dp"
-            android:textSize="11sp"
-            android:textColor="@color/message_time" />
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/layoutSenderHeader"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:baselineAligned="true"
+                android:orientation="horizontal"
+                android:paddingBottom="2dp">
+
+                <TextView
+                    android:id="@+id/textSenderName"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    tools:text="מלכה סלע" />
+
+                <TextView
+                    android:id="@+id/textTimestamp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:textColor="@color/text_hint"
+                    android:textSize="11sp"
+                    tools:text="19:58" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/textMessageContent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:lineSpacingMultiplier="1.35"
+                android:textColor="@color/text_primary"
+                android:textIsSelectable="true"
+                android:textSize="15sp"
+                tools:text="ערב טוב. האם יש בקבוצה מישהו שמבין בתוכניות?" />
+
+        </LinearLayout>
 
     </LinearLayout>
 

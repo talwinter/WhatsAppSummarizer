@@ -181,15 +181,53 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
-                        android:lineSpacingMultiplier="1.45"
+                        android:lineSpacingMultiplier="1.5"
                         android:textColor="@color/text_primary"
                         android:textIsSelectable="true"
-                        android:textSize="15sp"
+                        android:textSize="16sp"
                         tools:text="They agreed to meet at 18:00." />
 
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
+
+            <!-- Sources: each one jumps to that exact message in the transcript -->
+            <LinearLayout
+                android:id="@+id/layoutSources"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="24dp"
+                android:orientation="vertical"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <TextView
+                    android:id="@+id/textSourcesHeader"
+                    style="@style/Text.Label"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="4dp"
+                    android:text="@string/ask_sources_header" />
+
+                <TextView
+                    style="@style/Text.Body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:paddingHorizontal="4dp"
+                    android:text="@string/ask_sources_hint"
+                    android:textSize="12sp" />
+
+                <!-- Cards are inflated into here at runtime: a handful of items, and
+                     a nested RecyclerView inside a ScrollView measures badly. -->
+                <LinearLayout
+                    android:id="@+id/containerSources"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+            </LinearLayout>
 
         </LinearLayout>
 

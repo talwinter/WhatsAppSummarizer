@@ -170,6 +170,23 @@ object AiClient {
     }
 
     /**
+     * Pulls a JSON object out of a model reply, with the same tolerance as
+     * [extractJsonArray]. Returns null when there is nothing parseable, letting the
+     * caller fall back to treating the reply as plain prose.
+     */
+    fun extractJsonObject(reply: String): JSONObject? {
+        val start = reply.indexOf('{')
+        val end = reply.lastIndexOf('}')
+        if (start < 0 || end <= start) return null
+        return try {
+            JSONObject(reply.substring(start, end + 1))
+        } catch (e: Exception) {
+            Log.w("AiClient", "Malformed JSON object in model reply", e)
+            null
+        }
+    }
+
+    /**
      * Pulls a JSON array out of a model reply.
      *
      * Models wrap JSON in prose or fenced code blocks often enough that parsing the
