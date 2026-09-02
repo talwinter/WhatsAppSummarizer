@@ -88,4 +88,18 @@
     <string name="questions_no_key_title">API key needed</string>
     <string name="questions_no_key_body">Set your OpenAI API key in Settings to scan your groups for unanswered questions.</string>
     <string name="questions_failed">Scan failed: %1$s</string>
+    <string name="ask_title">Ask your groups</string>
+    <string name="ask_intro">Ask anything about what was said across all your groups. Unlike WhatsApp search, you do not need the exact words or the right chat.</string>
+    <string name="ask_hint">Your question</string>
+    <string name="ask_action">Ask</string>
+    <string name="ask_searching">Reading your groups…</string>
+    <string name="ask_empty">Type a question first</string>
+    <string name="ask_failed">Could not answer: %1$s</string>
+    <string name="ask_example_1">What was decided?</string>
+    <string name="ask_example_2">Any open questions for me?</string>
+    <string name="ask_example_3">What did I miss today?</string>
+    <plurals name="ask_source_count">
+        <item quantity="one">From %d message</item>
+        <item quantity="other">From %d messages</item>
+    </plurals>
 </resources>

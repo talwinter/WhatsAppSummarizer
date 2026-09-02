@@ -90,4 +90,20 @@
     <string name="questions_no_key_title">נדרש מפתח API</string>
     <string name="questions_no_key_body">הגדר מפתח OpenAI בהגדרות כדי לסרוק את הקבוצות ולמצוא שאלות שלא נענו.</string>
     <string name="questions_failed">הסריקה נכשלה: %1$s</string>
+    <string name="ask_title">שאל את הקבוצות</string>
+    <string name="ask_intro">שאל כל דבר על מה שנאמר בכל הקבוצות שלך. בשונה מהחיפוש של וואטסאפ, אין צורך במילים המדויקות או בקבוצה הנכונה.</string>
+    <string name="ask_hint">השאלה שלך</string>
+    <string name="ask_action">שאל</string>
+    <string name="ask_searching">קורא את הקבוצות שלך…</string>
+    <string name="ask_empty">הקלד שאלה קודם</string>
+    <string name="ask_failed">לא ניתן לענות: %1$s</string>
+    <string name="ask_example_1">מה הוחלט?</string>
+    <string name="ask_example_2">יש שאלות פתוחות אליי?</string>
+    <string name="ask_example_3">מה פספסתי היום?</string>
+    <plurals name="ask_source_count">
+        <item quantity="one">מתוך הודעה אחת</item>
+        <item quantity="two">מתוך שתי הודעות</item>
+        <item quantity="many">מתוך %d הודעות</item>
+        <item quantity="other">מתוך %d הודעות</item>
+    </plurals>
 </resources>
