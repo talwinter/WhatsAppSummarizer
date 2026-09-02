@@ -70,4 +70,15 @@
     <string name="menu_merge_chats">מיזוג קבוצות דומות</string>
     <string name="menu_clear_duplicates">ניקוי כפילויות</string>
     <string name="green_api_groups">קבוצות וואטסאפ (GreenAPI)</string>
+    <string name="alerts_section">🔔 התראות חכמות</string>
+    <string name="alerts_description">עוקב אחרי הקבוצות ומתריע רק כשהודעה מתאימה למה שחשוב לך. כל השאר נשאר שקט - כך שאפשר להשתיק קבוצות רועשות בלי לפספס את ההודעה שכן חשובה.</string>
+    <string name="alerts_rules_hint">מה כן צריך להפריע לי?</string>
+    <string name="alerts_examples">לדוגמה: הודעות מהכיתה ואיסוף מבית הספר · כל דבר על משלוחים לכתובת שלי · מישהו ששואל שאלה שאני יכול לענות עליה · אזכור של השם שלי</string>
+    <string name="channel_alerts">התראות חכמות</string>
+    <string name="channel_alerts_description">מתריע כשהודעה בקבוצה מתאימה לתחומי העניין שלך</string>
+    <string name="channel_digest">תקציר יומי</string>
+    <string name="channel_digest_description">סיכום שקט של הקבוצות פעם ביום</string>
+    <string name="alerts_need_key">הגדר קודם מפתח API של OpenAI - ההתראות זקוקות לו.</string>
+    <string name="alerts_need_rules">תאר למטה מה צריך להפריע לך.</string>
+    <string name="alerts_need_permission">אפשר התראות כדי שההתראות יגיעו אליך.</string>
 </resources>

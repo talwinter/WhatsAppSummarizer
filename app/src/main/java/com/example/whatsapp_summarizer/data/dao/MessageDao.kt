@@ -8,7 +8,8 @@ import java.util.*
 
 @Dao
 interface MessageDao {
-    @Insert
+    /** Returns -1 when the unique index rejected the row as an already-seen message. */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertMessage(message: Message): Long
 
     @Query("SELECT * FROM messages ORDER BY timestamp DESC")
@@ -44,7 +45,12 @@ interface MessageDao {
     @Query("SELECT COUNT(*) FROM messages")
     suspend fun getMessageCount(): Int
 
-    @Query("DELETE FROM messages WHERE id NOT IN (SELECT MIN(id) FROM messages GROUP BY chatName, senderName, messageContent, timestamp/1000)")
+    /**
+     * Collapses messages captured more than once before the unique index existed.
+     * Grouping deliberately excludes timestamp: those rows carry capture times, so
+     * copies of one message all differ there. Keeps the earliest row of each.
+     */
+    @Query("DELETE FROM messages WHERE id NOT IN (SELECT MIN(id) FROM messages GROUP BY chatName, senderName, messageContent)")
     suspend fun removeDuplicateMessages(): Int
 
     @Query("SELECT chatName, COUNT(*) as count FROM messages GROUP BY chatName ORDER BY count DESC")
@@ -58,6 +64,20 @@ interface MessageDao {
 
     @Query("DELETE FROM messages")
     suspend fun deleteAllMessages(): Int
+
+    // ---- Cross-group queries used by alerts, digest, open questions and ask ----
+    // All of them restrict to groups, matching what the rest of the app shows.
+
+    /** Everything captured after [since], oldest first. Drives alerts and digests. */
+    @Query("SELECT * FROM messages WHERE isGroup = 1 AND timestamp > :since ORDER BY timestamp ASC")
+    suspend fun getGroupMessagesSince(since: Long): List<Message>
+
+    @Query("SELECT * FROM messages WHERE isGroup = 1 AND timestamp >= :start AND timestamp <= :end ORDER BY chatName ASC, timestamp ASC")
+    suspend fun getGroupMessagesInRange(start: Long, end: Long): List<Message>
+
+    /** Newest first, capped - the starting pool for cross-group question answering. */
+    @Query("SELECT * FROM messages WHERE isGroup = 1 ORDER BY timestamp DESC LIMIT :limit")
+    suspend fun getRecentGroupMessages(limit: Int): List<Message>
 
     @Query("SELECT COUNT(*) FROM messages WHERE isGroup = 0")
     suspend fun getPersonalMessageCount(): Int

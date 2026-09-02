@@ -89,6 +89,19 @@ class MessageRepository(private val messageDao: MessageDao) {
         messageDao.deleteAllMessages()
     }
 
+    suspend fun getGroupMessagesSince(since: Long): List<Message> = withContext(Dispatchers.IO) {
+        messageDao.getGroupMessagesSince(since)
+    }
+
+    suspend fun getGroupMessagesInRange(start: Long, end: Long): List<Message> =
+        withContext(Dispatchers.IO) {
+            messageDao.getGroupMessagesInRange(start, end)
+        }
+
+    suspend fun getRecentGroupMessages(limit: Int): List<Message> = withContext(Dispatchers.IO) {
+        messageDao.getRecentGroupMessages(limit)
+    }
+
     suspend fun getPersonalMessageCount(): Int = withContext(Dispatchers.IO) {
         messageDao.getPersonalMessageCount()
     }

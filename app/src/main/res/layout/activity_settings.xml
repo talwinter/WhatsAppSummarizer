@@ -285,6 +285,96 @@
 
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Smart Alerts Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                app:cardBackgroundColor="@color/surface_dark"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/alerts_section"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/text_primary" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:text="@string/alerts_description"
+                                android:textSize="13sp"
+                                android:lineSpacingMultiplier="1.25"
+                                android:textColor="@color/text_secondary" />
+
+                        </LinearLayout>
+
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchAlerts"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp" />
+
+                    </LinearLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/layoutAlertRules"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:hint="@string/alerts_rules_hint"
+                        app:boxStrokeColor="@color/outline"
+                        app:counterEnabled="true"
+                        app:counterMaxLength="500">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/editAlertRules"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="top|start"
+                            android:inputType="textMultiLine|textCapSentences"
+                            android:maxLength="500"
+                            android:minLines="4"
+                            android:textColor="@color/text_primary" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/alerts_examples"
+                        android:textSize="12sp"
+                        android:lineSpacingMultiplier="1.25"
+                        android:textColor="@color/text_hint" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- Display Settings Card -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"

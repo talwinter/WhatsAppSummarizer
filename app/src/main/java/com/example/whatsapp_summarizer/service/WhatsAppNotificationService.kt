@@ -11,7 +11,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import java.util.concurrent.ConcurrentHashMap
 
 class WhatsAppNotificationService : NotificationListenerService() {
 
@@ -19,10 +18,6 @@ class WhatsAppNotificationService : NotificationListenerService() {
     private val scope = CoroutineScope(Dispatchers.IO + job)
     private lateinit var repository: MessageRepository
     
-    // Track recent messages to prevent duplicates - Thread-safe
-    private val recentMessages = ConcurrentHashMap<String, Long>()
-    private val DEDUPLICATION_WINDOW_MS = 10000L // 10 seconds
-    private val MAX_RECENT_MESSAGES = 100
 
     companion object {
         private const val TAG = "WhatsAppService"
@@ -156,25 +151,38 @@ class WhatsAppNotificationService : NotificationListenerService() {
             if (chatName.isNotBlank() && messageContent.isNotBlank()) {
                 // Normalize chat name
                 val normalizedChatName = normalizeChatName(chatName)
-                
-                // Check for duplicates
-                if (isDuplicate(normalizedChatName, senderName, messageContent)) {
-                    logSkipped(title, text, "Duplicate: $normalizedChatName | $senderName", normalizedChatName, senderName, messageContent, signals)
-                    return
-                }
 
                 val message = Message(
                     chatName = normalizedChatName,
                     senderName = senderName,
+                    // WhatsApp's own send time, not capture time. This is what lets
+                    // the unique index recognise a re-posted notification, and it
+                    // also means time-range summaries filter on when messages were
+                    // actually sent.
+                    timestamp = inspection.timestamp,
                     messageContent = messageContent,
-                    timestamp = System.currentTimeMillis(),
                     isGroup = isGroup
                 )
 
                 scope.launch {
                     try {
-                        repository.insertMessage(message)
-                        logSaved(title, text, normalizedChatName, senderName, messageContent, signals)
+                        // Duplicates are rejected by the unique index rather than by a
+                        // time window: WhatsApp re-posts every active conversation
+                        // notification whenever any new message arrives anywhere, so
+                        // re-delivery happens minutes or hours apart.
+                        val rowId = repository.insertMessage(message)
+                        if (rowId == -1L) {
+                            logSkipped(
+                                title, text, "Already captured (re-posted notification)",
+                                normalizedChatName, senderName, messageContent, signals
+                            )
+                        } else {
+                            logSaved(title, text, normalizedChatName, senderName, messageContent, signals)
+                            // Queue a smart-alert check. Debounced inside, so a burst
+                            // of messages collapses into a single model call.
+                            com.example.whatsapp_summarizer.feature.alerts.AlertWorker
+                                .schedule(applicationContext)
+                        }
                     } catch (e: Exception) {
                         Log.e(TAG, "Failed to save message", e)
                         logSkipped(title, text, "DB Error: ${e.message}", normalizedChatName, senderName, messageContent, signals)
@@ -235,39 +243,6 @@ class WhatsAppNotificationService : NotificationListenerService() {
         return com.example.whatsapp_summarizer.util.ChatNameNormalizer.normalize(name)
     }
     
-    private fun isDuplicate(chatName: String, senderName: String, content: String): Boolean {
-        val normalizedContent = content.trim().take(100) // First 100 chars for comparison
-        val normalizedChat = normalizeChatName(chatName)
-        val now = System.currentTimeMillis()
-        
-        // Clean old entries
-        val oldKeys = recentMessages.entries.filter { now - it.value > DEDUPLICATION_WINDOW_MS }
-        oldKeys.forEach { recentMessages.remove(it.key) }
-        
-        // Check for duplicate by content within time window (regardless of sender/chat name variations)
-        val contentKey = "$normalizedChat|$normalizedContent"
-        if (recentMessages.containsKey(contentKey)) {
-            return true
-        }
-        
-        // Also check exact key
-        val exactKey = "$chatName|$senderName|$content"
-        if (recentMessages.containsKey(exactKey)) {
-            return true
-        }
-        
-        // Add both keys
-        recentMessages[contentKey] = now
-        recentMessages[exactKey] = now
-        
-        // Limit size
-        while (recentMessages.size > MAX_RECENT_MESSAGES) {
-            recentMessages.keys.firstOrNull()?.let { recentMessages.remove(it) }
-        }
-        
-        return false
-    }
-
     override fun onNotificationRemoved(sbn: StatusBarNotification?) {
         // Not needed for our use case
     }

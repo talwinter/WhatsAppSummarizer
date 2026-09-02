@@ -24,6 +24,7 @@ object NotificationInspector {
     private const val KEY_TEXT = "text"
     private const val KEY_SENDER = "sender"
     private const val KEY_SENDER_PERSON = "sender_person"
+    private const val KEY_TIME = "time"
 
     /** A colon this far into the text is a sentence, not a "Sender: message" prefix. */
     private const val MAX_SENDER_NAME_LENGTH = 30
@@ -51,6 +52,14 @@ object NotificationInspector {
         val chatName: String,
         val senderName: String,
         val messageContent: String,
+        /**
+         * WhatsApp's own send time for the message, which is what makes a message
+         * identifiable. Falls back to capture time when the notification does not
+         * carry one - see [resolveTimestamp].
+         */
+        val timestamp: Long,
+        /** True when we had to fall back to capture time. */
+        val timestampIsApproximate: Boolean,
         /** Human-readable dump of the raw signals, for the in-app debug log. */
         val diagnostics: String
     )
@@ -82,6 +91,8 @@ object NotificationInspector {
             append(" | messages=${messages.size}")
             append(" | senders=")
             append(if (distinctSenders.isEmpty()) "none" else distinctSenders.joinToString(","))
+            append(" | time=")
+            append(messages.lastOrNull()?.time?.toString() ?: "absent")
         }
 
         // The newest MessagingStyle message is the one this notification is about.
@@ -135,17 +146,39 @@ object NotificationInspector {
 
         messageContent = messageContent.replace("\\n", "\n").trim()
 
+        val (timestamp, approximate) = resolveTimestamp(latest?.time ?: 0L)
+
         return Result(
             isGroup = isGroup,
             signal = signal,
             chatName = chatName.trim(),
             senderName = senderName.trim(),
             messageContent = messageContent,
+            timestamp = timestamp,
+            timestampIsApproximate = approximate,
             diagnostics = diagnostics
         )
     }
 
-    private data class StyleMessage(val sender: String?, val text: String?)
+    /**
+     * WhatsApp's send time identifies a message, which is what lets the database
+     * reject the same message when the notification is re-posted.
+     *
+     * If it is missing we fall back to capture time. That is deliberately the
+     * *unsafe-for-dedup* direction: a unique capture time means the row can never
+     * collide with a genuinely different message, so a missing send time costs us
+     * a possible duplicate rather than silently discarding real data.
+     */
+    private fun resolveTimestamp(styleTime: Long): Pair<Long, Boolean> {
+        if (styleTime > 0L) return styleTime to false
+        android.util.Log.w(
+            "NotificationInspector",
+            "MessagingStyle carried no send time; falling back to capture time"
+        )
+        return System.currentTimeMillis() to true
+    }
+
+    private data class StyleMessage(val sender: String?, val text: String?, val time: Long)
 
     /** Reads Notification.EXTRA_MESSAGES ("android.messages") if WhatsApp supplied it. */
     private fun readMessages(extras: Bundle): List<StyleMessage> {
@@ -160,7 +193,8 @@ object NotificationInspector {
             val bundle = parcelable as? Bundle ?: return@mapNotNull null
             StyleMessage(
                 sender = readSender(bundle),
-                text = bundle.getCharSequence(KEY_TEXT)?.toString()?.trim()
+                text = bundle.getCharSequence(KEY_TEXT)?.toString()?.trim(),
+                time = bundle.getLong(KEY_TIME, 0L)
             )
         }
     }

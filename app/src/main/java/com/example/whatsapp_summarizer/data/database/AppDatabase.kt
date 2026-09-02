@@ -9,7 +9,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.whatsapp_summarizer.data.dao.MessageDao
 import com.example.whatsapp_summarizer.data.model.Message
 
-@Database(entities = [Message::class], version = 4, exportSchema = false)
+@Database(entities = [Message::class], version = 5, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun messageDao(): MessageDao
 
@@ -157,6 +157,39 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Makes duplicate messages structurally impossible.
+         *
+         * WhatsApp re-posts every active conversation notification whenever any new
+         * message arrives anywhere, so the listener saw the same message repeatedly -
+         * one was captured 24 times over three hours. Rows are now keyed by WhatsApp's
+         * own send time, so a re-post collides with the row it already wrote.
+         *
+         * Existing rows were stamped with capture time, which cannot be recovered, so
+         * copies of one message all differ on timestamp. They are collapsed by
+         * (chat, sender, content) keeping the earliest - closest to the real send
+         * time - and only then can the unique index be created.
+         */
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    """
+                    DELETE FROM messages WHERE id NOT IN (
+                        SELECT MIN(id) FROM messages
+                        GROUP BY chatName, senderName, messageContent
+                    )
+                    """.trimIndent()
+                )
+                // Name must match what Room derives from the @Entity index, or the
+                // schema validation on open will fail.
+                database.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS " +
+                        "index_messages_chatName_senderName_messageContent_timestamp " +
+                        "ON messages (chatName, senderName, messageContent, timestamp)"
+                )
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -164,7 +197,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "whatsapp_summarizer_db"
                 )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .build()
                 INSTANCE = instance
                 instance

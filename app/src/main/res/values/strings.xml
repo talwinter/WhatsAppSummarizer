@@ -68,4 +68,15 @@
     <string name="menu_debug">Debug log</string>
     <string name="menu_merge_chats">Merge similar groups</string>
     <string name="menu_clear_duplicates">Clear duplicates</string>
+    <string name="alerts_section">🔔 Smart Alerts</string>
+    <string name="alerts_description">Watches your groups and notifies you only when a message matches what you care about. Everything else stays silent - so you can keep noisy groups muted without missing the message that matters.</string>
+    <string name="alerts_rules_hint">What should interrupt me?</string>
+    <string name="alerts_examples">Examples: school pickups and class messages · anything about deliveries to my address · someone asking a question I could answer · anything mentioning my name</string>
+    <string name="channel_alerts">Smart alerts</string>
+    <string name="channel_alerts_description">Notifies you when a group message matches your interests</string>
+    <string name="channel_digest">Daily digest</string>
+    <string name="channel_digest_description">A quiet once-a-day summary of your groups</string>
+    <string name="alerts_need_key">Set your OpenAI API key first - alerts need it to read messages.</string>
+    <string name="alerts_need_rules">Describe what should interrupt you, below.</string>
+    <string name="alerts_need_permission">Allow notifications so alerts can reach you.</string>
 </resources>

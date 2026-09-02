@@ -3,13 +3,17 @@ package com.example.whatsapp_summarizer.ui.settings
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.doAfterTextChanged
 import com.example.whatsapp_summarizer.R
 import com.example.whatsapp_summarizer.databinding.ActivitySettingsBinding
+import com.example.whatsapp_summarizer.feature.alerts.AlertSettings
 import com.example.whatsapp_summarizer.util.SecureStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,6 +24,20 @@ class SettingsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySettingsBinding
     private lateinit var secureStorage: SecureStorage
+    private lateinit var alertSettings: AlertSettings
+
+    /**
+     * Android 13+ requires POST_NOTIFICATIONS before we can reach the user. Asked
+     * at the moment they switch alerts on, which is when the reason is obvious.
+     */
+    private val requestNotificationPermission =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (!granted) {
+                Toast.makeText(
+                    this, getString(R.string.alerts_need_permission), Toast.LENGTH_LONG
+                ).show()
+            }
+        }
     private val job = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.Main + job)
 
@@ -39,6 +57,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         secureStorage = SecureStorage(this)
+        alertSettings = AlertSettings(this)
 
         setupUI()
         setupListeners()
@@ -65,6 +84,12 @@ class SettingsActivity : AppCompatActivity() {
 
         // Groups-only capture (default on)
         binding.switchGroupsOnly.isChecked = prefs.getBoolean("groups_only", true)
+
+        // Smart alerts
+        binding.switchAlerts.isChecked = alertSettings.enabled
+        if (binding.editAlertRules.text.isNullOrEmpty()) {
+            binding.editAlertRules.setText(alertSettings.rules)
+        }
 
         // RTL Toggle
         binding.switchRtl.isChecked = prefs.getBoolean("rtl_mode", false)
@@ -119,6 +144,30 @@ class SettingsActivity : AppCompatActivity() {
                 "Personal conversations will be captured too"
             }
             Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+        }
+
+        // Smart alerts on/off
+        binding.switchAlerts.setOnCheckedChangeListener { _, isChecked ->
+            alertSettings.enabled = isChecked
+            if (isChecked) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    requestNotificationPermission.launch(
+                        android.Manifest.permission.POST_NOTIFICATIONS
+                    )
+                }
+                // Say plainly what is still missing rather than failing silently later.
+                when {
+                    !secureStorage.hasApiKey() ->
+                        Toast.makeText(this, getString(R.string.alerts_need_key), Toast.LENGTH_LONG).show()
+                    alertSettings.rules.isBlank() ->
+                        Toast.makeText(this, getString(R.string.alerts_need_rules), Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+
+        // Alert rules - saved as typed
+        binding.editAlertRules.doAfterTextChanged { text ->
+            alertSettings.rules = text?.toString()?.trim().orEmpty()
         }
 
         // Purge personal chats captured before group detection was fixed
