@@ -4,6 +4,33 @@ plugins {
     id 'com.google.devtools.ksp'
 }
 
+// ---- Release signing inputs, resolved before the android block needs them ----
+// Put these in local.properties (already gitignored), or export them as environment
+// variables in CI:
+//   RELEASE_STORE_PASSWORD, RELEASE_KEY_ALIAS, RELEASE_KEY_PASSWORD
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withInputStream { localProperties.load(it) }
+}
+
+def secret = { String name ->
+    localProperties.getProperty(name) ?: System.getenv(name)
+}
+
+def releaseStorePassword = secret('RELEASE_STORE_PASSWORD')
+def releaseKeyAlias = secret('RELEASE_KEY_ALIAS')
+def releaseKeyPassword = secret('RELEASE_KEY_PASSWORD')
+def releaseKeystoreFile = rootProject.file('keystore.jks')
+
+def canSignRelease = releaseStorePassword != null && releaseKeyAlias != null &&
+        releaseKeyPassword != null && releaseKeystoreFile.exists()
+
+if (!canSignRelease) {
+    logger.lifecycle('Release signing not configured - release builds will be unsigned. ' +
+            'See the comment above the signingConfigs block in app/build.gradle.')
+}
+
 android {
     namespace 'com.example.whatsapp_summarizer'
     compileSdk 34
@@ -12,16 +39,22 @@ android {
         applicationId "com.example.whatsapp_summarizer"
         minSdk 26
         targetSdk 34
-        versionCode 27
-        versionName "3.8"
+        versionCode 28
+        versionName "4.0"
     }
 
+    // Release signing credentials are read from local.properties (gitignored) or the
+    // environment - never written in this file, which is committed to a public repo.
+    // Release signing is skipped entirely when they are absent, so cloning the repo
+    // and building a debug APK works with no setup.
     signingConfigs {
-        release {
-            storeFile file("../keystore.jks")
-            storePassword "summarizer123"
-            keyAlias "whatsappsummarizer"
-            keyPassword "summarizer123"
+        if (canSignRelease) {
+            release {
+                storeFile releaseKeystoreFile
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
         }
     }
 
@@ -29,7 +62,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            signingConfig canSignRelease ? signingConfigs.release : null
         }
     }
     compileOptions {

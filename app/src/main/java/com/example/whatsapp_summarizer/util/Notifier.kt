@@ -28,7 +28,7 @@ object Notifier {
     private var nextAlertId = 3000
 
     fun ensureChannels(context: Context) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        // No version guard needed: channels arrived in API 26 and minSdk is 26.
         val manager = context.getSystemService(NotificationManager::class.java) ?: return
 
         manager.createNotificationChannel(
