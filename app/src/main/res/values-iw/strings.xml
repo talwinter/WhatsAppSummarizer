@@ -81,4 +81,13 @@
     <string name="alerts_need_key">הגדר קודם מפתח API של OpenAI - ההתראות זקוקות לו.</string>
     <string name="alerts_need_rules">תאר למטה מה צריך להפריע לך.</string>
     <string name="alerts_need_permission">אפשר התראות כדי שההתראות יגיעו אליך.</string>
+    <string name="questions_title">שאלות פתוחות</string>
+    <string name="questions_intro">שאלות בקבוצות שלך שאף אחד לא ענה עליהן, מהחדשות לישנות. הקש על שאלה כדי לפתוח את הקבוצה.</string>
+    <string name="questions_scan">סרוק שאלות פתוחות</string>
+    <string name="questions_scanning">קורא את הימים האחרונים…</string>
+    <string name="questions_empty_title">לא נשאר שום דבר תלוי</string>
+    <string name="questions_empty_body">כל שאלה שנשאלה בקבוצות שלך בימים האחרונים קיבלה תגובה כלשהי.</string>
+    <string name="questions_no_key_title">נדרש מפתח API</string>
+    <string name="questions_no_key_body">הגדר מפתח OpenAI בהגדרות כדי לסרוק את הקבוצות ולמצוא שאלות שלא נענו.</string>
+    <string name="questions_failed">הסריקה נכשלה: %1$s</string>
 </resources>

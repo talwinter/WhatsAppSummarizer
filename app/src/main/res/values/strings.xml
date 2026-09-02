@@ -79,4 +79,13 @@
     <string name="alerts_need_key">Set your OpenAI API key first - alerts need it to read messages.</string>
     <string name="alerts_need_rules">Describe what should interrupt you, below.</string>
     <string name="alerts_need_permission">Allow notifications so alerts can reach you.</string>
+    <string name="questions_title">Open questions</string>
+    <string name="questions_intro">Questions in your groups that nobody answered, newest first. Tap one to open the group.</string>
+    <string name="questions_scan">Scan for open questions</string>
+    <string name="questions_scanning">Reading the last few days…</string>
+    <string name="questions_empty_title">Nothing left hanging</string>
+    <string name="questions_empty_body">Every question asked in your groups over the last few days got some kind of reply.</string>
+    <string name="questions_no_key_title">API key needed</string>
+    <string name="questions_no_key_body">Set your OpenAI API key in Settings to scan your groups for unanswered questions.</string>
+    <string name="questions_failed">Scan failed: %1$s</string>
 </resources>
