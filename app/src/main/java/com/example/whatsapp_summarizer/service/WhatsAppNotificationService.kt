@@ -166,10 +166,21 @@ class WhatsAppNotificationService : NotificationListenerService() {
 
                 scope.launch {
                     try {
-                        // Duplicates are rejected by the unique index rather than by a
-                        // time window: WhatsApp re-posts every active conversation
-                        // notification whenever any new message arrives anywhere, so
-                        // re-delivery happens minutes or hours apart.
+                        // WhatsApp re-posts every active conversation notification
+                        // whenever any new message arrives anywhere, so the same
+                        // message is delivered again minutes or hours later. Two
+                        // layers reject it: the unique index handles re-posts that
+                        // report an identical send time, and this tolerance check
+                        // handles the ones where that time is jittered by a second or
+                        // two. Neither depends on how long ago the message arrived.
+                        if (repository.isNearDuplicate(message)) {
+                            logSkipped(
+                                title, text, "Already captured (re-post, jittered send time)",
+                                normalizedChatName, senderName, messageContent, signals
+                            )
+                            return@launch
+                        }
+
                         val rowId = repository.insertMessage(message)
                         if (rowId == -1L) {
                             logSkipped(

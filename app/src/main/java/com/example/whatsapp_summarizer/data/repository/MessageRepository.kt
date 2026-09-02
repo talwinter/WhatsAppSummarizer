@@ -89,6 +89,23 @@ class MessageRepository(private val messageDao: MessageDao) {
         messageDao.deleteAllMessages()
     }
 
+    /** Window either side of a send time within which the same text is the same message. */
+    private val JITTER_WINDOW_MS = 5_000L
+
+    /**
+     * True when this message is already stored with a send time close enough that it
+     * must be the same message re-delivered rather than a genuine repeat.
+     */
+    suspend fun isNearDuplicate(message: Message): Boolean = withContext(Dispatchers.IO) {
+        messageDao.countNearDuplicates(
+            chatName = message.chatName,
+            senderName = message.senderName,
+            content = message.messageContent,
+            from = message.timestamp - JITTER_WINDOW_MS,
+            to = message.timestamp + JITTER_WINDOW_MS
+        ) > 0
+    }
+
     suspend fun getGroupMessagesSince(since: Long): List<Message> = withContext(Dispatchers.IO) {
         messageDao.getGroupMessagesSince(since)
     }

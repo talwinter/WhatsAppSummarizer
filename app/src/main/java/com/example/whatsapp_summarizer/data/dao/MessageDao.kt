@@ -79,6 +79,27 @@ interface MessageDao {
     @Query("SELECT * FROM messages WHERE isGroup = 1 ORDER BY timestamp DESC LIMIT :limit")
     suspend fun getRecentGroupMessages(limit: Int): List<Message>
 
+    /**
+     * Counts the same message already stored with a send time within a window.
+     *
+     * The unique index catches a re-post that reports an identical send time, but
+     * WhatsApp jitters that value by up to a couple of seconds across re-posts - one
+     * message was seen twice at 14:12:35, differing only in milliseconds. This is the
+     * tolerance check that closes that gap.
+     */
+    @Query(
+        "SELECT COUNT(*) FROM messages WHERE chatName = :chatName " +
+            "AND senderName = :senderName AND messageContent = :content " +
+            "AND timestamp >= :from AND timestamp <= :to"
+    )
+    suspend fun countNearDuplicates(
+        chatName: String,
+        senderName: String,
+        content: String,
+        from: Long,
+        to: Long
+    ): Int
+
     @Query("SELECT COUNT(*) FROM messages WHERE isGroup = 0")
     suspend fun getPersonalMessageCount(): Int
 
